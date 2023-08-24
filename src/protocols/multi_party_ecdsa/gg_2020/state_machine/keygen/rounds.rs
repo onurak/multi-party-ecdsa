@@ -12,9 +12,14 @@ use round_based::containers::{self, BroadcastMsgs, P2PMsgs, Store};
 use round_based::Msg;
 use zk_paillier::zkproofs::DLogStatement;
 
-use crate::protocols::multi_party_ecdsa::gg_2020::party_i::{
-    KeyGenBroadcastMessage1, KeyGenDecommitMessage1, Keys,
+use crate::protocols::multi_party_ecdsa::gg_2020::{
+    state_machine::keygen::party_i::{
+        Keys,
+    },
 };
+
+use super::messages::broadcast_message::KeyGenBroadcastMessage;
+use super::messages::decommit_message::KeyGenDecommitMessage;
 use crate::protocols::multi_party_ecdsa::gg_2020::{self, ErrorType};
 
 pub struct Round0 {
@@ -26,9 +31,9 @@ pub struct Round0 {
 impl Round0 {
     pub fn proceed<O>(self, mut output: O) -> Result<Round1>
     where
-        O: Push<Msg<gg_2020::party_i::KeyGenBroadcastMessage1>>,
+        O: Push<Msg<KeyGenBroadcastMessage>>,
     {
-        let party_keys = Keys::create(self.party_i as usize);
+        let party_keys = Keys::create_safe_prime(self.party_i as usize);
         let (bc1, decom1) =
             party_keys.phase1_broadcast_phase3_proof_of_correct_key_proof_of_correct_h1h2();
 
@@ -53,8 +58,8 @@ impl Round0 {
 
 pub struct Round1 {
     keys: Keys,
-    bc1: KeyGenBroadcastMessage1,
-    decom1: KeyGenDecommitMessage1,
+    bc1: KeyGenBroadcastMessage,
+    decom1: KeyGenDecommitMessage,
     party_i: u16,
     t: u16,
     n: u16,
@@ -63,11 +68,11 @@ pub struct Round1 {
 impl Round1 {
     pub fn proceed<O>(
         self,
-        input: BroadcastMsgs<KeyGenBroadcastMessage1>,
+        input: BroadcastMsgs<KeyGenBroadcastMessage>,
         mut output: O,
     ) -> Result<Round2>
     where
-        O: Push<Msg<gg_2020::party_i::KeyGenDecommitMessage1>>,
+        O: Push<Msg<KeyGenDecommitMessage>>,
     {
         output.push(Msg {
             sender: self.party_i,
@@ -87,15 +92,15 @@ impl Round1 {
     pub fn is_expensive(&self) -> bool {
         false
     }
-    pub fn expects_messages(i: u16, n: u16) -> Store<BroadcastMsgs<KeyGenBroadcastMessage1>> {
+    pub fn expects_messages(i: u16, n: u16) -> Store<BroadcastMsgs<KeyGenBroadcastMessage>> {
         containers::BroadcastMsgsStore::new(i, n)
     }
 }
 
 pub struct Round2 {
-    keys: gg_2020::party_i::Keys,
-    received_comm: Vec<KeyGenBroadcastMessage1>,
-    decom: KeyGenDecommitMessage1,
+    keys: gg_2020::state_machine::keygen::party_i::Keys,
+    received_comm: Vec<KeyGenBroadcastMessage>,
+    decom: KeyGenDecommitMessage,
 
     party_i: u16,
     t: u16,
@@ -105,13 +110,13 @@ pub struct Round2 {
 impl Round2 {
     pub fn proceed<O>(
         self,
-        input: BroadcastMsgs<KeyGenDecommitMessage1>,
+        input: BroadcastMsgs<KeyGenDecommitMessage>,
         mut output: O,
     ) -> Result<Round3>
     where
         O: Push<Msg<(VerifiableSS<Secp256k1>, Scalar<Secp256k1>)>>,
     {
-        let params = gg_2020::party_i::Parameters {
+        let params = gg_2020::state_machine::keygen::party_i::Parameters {
             threshold: self.t,
             share_count: self.n,
         };
@@ -155,16 +160,16 @@ impl Round2 {
     pub fn is_expensive(&self) -> bool {
         true
     }
-    pub fn expects_messages(i: u16, n: u16) -> Store<BroadcastMsgs<KeyGenDecommitMessage1>> {
+    pub fn expects_messages(i: u16, n: u16) -> Store<BroadcastMsgs<KeyGenDecommitMessage>> {
         containers::BroadcastMsgsStore::new(i, n)
     }
 }
 
 pub struct Round3 {
-    keys: gg_2020::party_i::Keys,
+    keys: gg_2020::state_machine::keygen::party_i::Keys,
 
     y_vec: Vec<Point<Secp256k1>>,
-    bc_vec: Vec<gg_2020::party_i::KeyGenBroadcastMessage1>,
+    bc_vec: Vec<KeyGenBroadcastMessage>,
 
     own_vss: VerifiableSS<Secp256k1>,
     own_share: Scalar<Secp256k1>,
@@ -183,7 +188,7 @@ impl Round3 {
     where
         O: Push<Msg<DLogProof<Secp256k1, Sha256>>>,
     {
-        let params = gg_2020::party_i::Parameters {
+        let params = gg_2020::state_machine::keygen::party_i::Parameters {
             threshold: self.t,
             share_count: self.n,
         };
@@ -234,10 +239,10 @@ impl Round3 {
 }
 
 pub struct Round4 {
-    keys: gg_2020::party_i::Keys,
+    keys: gg_2020::state_machine::keygen::party_i::Keys,
     y_vec: Vec<Point<Secp256k1>>,
-    bc_vec: Vec<gg_2020::party_i::KeyGenBroadcastMessage1>,
-    shared_keys: gg_2020::party_i::SharedKeys,
+    bc_vec: Vec<KeyGenBroadcastMessage>,
+    shared_keys: gg_2020::state_machine::keygen::party_i::SharedKeys,
     own_dlog_proof: DLogProof<Secp256k1, Sha256>,
     vss_vec: Vec<VerifiableSS<Secp256k1>>,
 
@@ -251,7 +256,7 @@ impl Round4 {
         self,
         input: BroadcastMsgs<DLogProof<Secp256k1, Sha256>>,
     ) -> Result<LocalKey<Secp256k1>> {
-        let params = gg_2020::party_i::Parameters {
+        let params = gg_2020::state_machine::keygen::party_i::Parameters {
             threshold: self.t,
             share_count: self.n,
         };
@@ -311,7 +316,7 @@ impl Round4 {
 pub struct LocalKey<E: Curve> {
     pub paillier_dk: paillier::DecryptionKey,
     pub pk_vec: Vec<Point<E>>,
-    pub keys_linear: gg_2020::party_i::SharedKeys,
+    pub keys_linear: gg_2020::state_machine::keygen::party_i::SharedKeys,
     pub paillier_key_vec: Vec<EncryptionKey>,
     pub y_sum_s: Point<E>,
     pub h1_h2_n_tilde_vec: Vec<DLogStatement>,

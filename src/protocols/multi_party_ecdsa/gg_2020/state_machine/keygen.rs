@@ -12,13 +12,19 @@ use round_based::containers::{
     *,
 };
 use round_based::{IsCritical, Msg, StateMachine};
-use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use thiserror::Error;
 
-use crate::protocols::multi_party_ecdsa::gg_2020;
+use self::messages::{
+    ProtocolMessage,
+    broadcast_message::KeyGenBroadcastMessage,
+    decommit_message::KeyGenDecommitMessage,
+    M
+};
 
-mod rounds;
+pub mod rounds;
+pub mod party_i;
+pub mod messages;
 
 use private::InternalError;
 pub use rounds::{LocalKey, ProceedError};
@@ -31,8 +37,8 @@ use rounds::{Round0, Round1, Round2, Round3, Round4};
 pub struct Keygen {
     round: R,
 
-    msgs1: Option<Store<BroadcastMsgs<gg_2020::party_i::KeyGenBroadcastMessage1>>>,
-    msgs2: Option<Store<BroadcastMsgs<gg_2020::party_i::KeyGenDecommitMessage1>>>,
+    msgs1: Option<Store<BroadcastMsgs<KeyGenBroadcastMessage>>>,
+    msgs2: Option<Store<BroadcastMsgs<KeyGenDecommitMessage>>>,
     msgs3: Option<Store<P2PMsgs<(VerifiableSS<Secp256k1>, Scalar<Secp256k1>)>>>,
     msgs4: Option<Store<BroadcastMsgs<DLogProof<Secp256k1, Sha256>>>>,
 
@@ -414,16 +420,7 @@ enum R {
 /// Protocol message which parties send on wire
 ///
 /// Hides actual messages structure so it could be changed without breaking semver policy.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProtocolMessage(M);
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-enum M {
-    Round1(gg_2020::party_i::KeyGenBroadcastMessage1),
-    Round2(gg_2020::party_i::KeyGenDecommitMessage1),
-    Round3((VerifiableSS<Secp256k1>, Scalar<Secp256k1>)),
-    Round4(DLogProof<Secp256k1, Sha256>),
-}
 
 // Error
 

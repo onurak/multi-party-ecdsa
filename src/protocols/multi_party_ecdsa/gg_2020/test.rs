@@ -19,10 +19,15 @@ use crate::protocols::multi_party_ecdsa::gg_2020::blame::{
     GlobalStatePhase5, GlobalStatePhase6, GlobalStatePhase7, LocalStatePhase5, LocalStatePhase6,
 };
 use crate::protocols::multi_party_ecdsa::gg_2020::party_i::SignatureRecid;
+use crate::protocols::multi_party_ecdsa::gg_2020::state_machine::keygen::messages::broadcast_message::KeyGenBroadcastMessage;
+use crate::protocols::multi_party_ecdsa::gg_2020::state_machine::keygen::messages::decommit_message::KeyGenDecommitMessage;
 use crate::protocols::multi_party_ecdsa::gg_2020::party_i::{
-    KeyGenBroadcastMessage1, KeyGenDecommitMessage1, Keys, LocalSignature, Parameters, SharedKeys,
+    LocalSignature, 
     SignKeys,
 };
+use crate::protocols::multi_party_ecdsa::gg_2020::state_machine::keygen::party_i::Keys;
+use crate::protocols::multi_party_ecdsa::gg_2020::state_machine::keygen::party_i::Parameters;
+use crate::protocols::multi_party_ecdsa::gg_2020::state_machine::keygen::party_i::SharedKeys;
 use crate::utilities::mta::{MessageA, MessageB};
 use curv::arithmetic::traits::Converter;
 
@@ -167,7 +172,7 @@ fn keygen_t_n_parties(
         share_count: n,
     };
     let (t, n) = (t as usize, n as usize);
-    let party_keys_vec = (0..n).map(Keys::create).collect::<Vec<Keys>>();
+    let party_keys_vec = (0..n).map(Keys::create_safe_prime).collect::<Vec<Keys>>();
 
     let (bc1_vec, decom_vec): (Vec<_>, Vec<_>) = party_keys_vec
         .iter()
@@ -750,21 +755,21 @@ fn check_sig(r: &Scalar<Secp256k1>, s: &Scalar<Secp256k1>, msg: &BigInt, pk: &Po
 fn test_serialize_deserialize() {
     use serde_json;
 
-    let k = Keys::create(0);
+    let k = Keys::create_safe_prime(0);
     let (commit, decommit) = k.phase1_broadcast_phase3_proof_of_correct_key_proof_of_correct_h1h2();
 
     let encoded = serde_json::to_string(&commit).unwrap();
-    let decoded: KeyGenBroadcastMessage1 = serde_json::from_str(&encoded).unwrap();
+    let decoded: KeyGenBroadcastMessage = serde_json::from_str(&encoded).unwrap();
     assert_eq!(commit.com, decoded.com);
 
     let encoded = serde_json::to_string(&decommit).unwrap();
-    let decoded: KeyGenDecommitMessage1 = serde_json::from_str(&encoded).unwrap();
+    let decoded: KeyGenDecommitMessage = serde_json::from_str(&encoded).unwrap();
     assert_eq!(decommit.y_i, decoded.y_i);
 }
 #[test]
 fn test_small_paillier() {
     // parties shouldn't be able to choose small Paillier modulus
-    let mut k = Keys::create(0);
+    let mut k = Keys::create_safe_prime(0);
     // creating 2046-bit Paillier
     let (ek, dk) = Paillier::keypair_with_modulus_size(2046).keys();
     k.dk = dk;
