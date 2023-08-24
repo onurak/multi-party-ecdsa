@@ -20,6 +20,7 @@ use crate::protocols::multi_party_ecdsa::gg_2020::{
 
 use super::messages::broadcast_message::KeyGenBroadcastMessage;
 use super::messages::decommit_message::KeyGenDecommitMessage;
+use super::messages::feldman_vss::{FeldmanVSS, SecretShare};
 use crate::protocols::multi_party_ecdsa::gg_2020::{self, ErrorType};
 
 pub struct Round0 {
@@ -114,7 +115,7 @@ impl Round2 {
         mut output: O,
     ) -> Result<Round3>
     where
-        O: Push<Msg<(VerifiableSS<Secp256k1>, Scalar<Secp256k1>)>>,
+        O: Push<Msg<FeldmanVSS>>,
     {
         let params = gg_2020::state_machine::keygen::party_i::Parameters {
             threshold: self.t,
@@ -139,7 +140,7 @@ impl Round2 {
             output.push(Msg {
                 sender: self.party_i,
                 receiver: Some(i as u16 + 1),
-                body: (vss_result.0.clone(), share.clone()),
+                body: FeldmanVSS { vss: vss_result.0.clone(), share: (self.party_i.into(), share.clone())},
             })
         }
 
@@ -182,7 +183,7 @@ pub struct Round3 {
 impl Round3 {
     pub fn proceed<O>(
         self,
-        input: P2PMsgs<(VerifiableSS<Secp256k1>, Scalar<Secp256k1>)>,
+        input: P2PMsgs<FeldmanVSS>,
         mut output: O,
     ) -> Result<Round4>
     where
@@ -192,18 +193,22 @@ impl Round3 {
             threshold: self.t,
             share_count: self.n,
         };
-        let (vss_schemes, party_shares): (Vec<_>, Vec<_>) = input
-            .into_vec_including_me((self.own_vss, self.own_share))
-            .into_iter()
-            .unzip();
+        // let (vss_schemes, party_shares): (Vec<_>, Vec<_>) = input
+        //     .into_vec_including_me(FeldmanVSS{vss:self.own_vss.clone(), share: (self.p)} (self.own_vss, self.own_share))
+        //     .into_iter()
+        //     .unzip();
+
+        let feldman_vss_list: Vec<FeldmanVSS> = input
+            .into_vec_including_me(FeldmanVSS{vss:self.own_vss.clone(), share: (self.party_i.into(), self.own_share.clone())});
 
         let (shared_keys, dlog_proof) = self
             .keys
             .phase2_verify_vss_construct_keypair_phase3_pok_dlog(
                 &params,
                 &self.y_vec,
-                &party_shares,
-                &vss_schemes,
+                // &party_shares,
+                // &vss_schemes,
+                &feldman_vss_list,
                 self.party_i.into(),
             )
             .map_err(ProceedError::Round3VerifyVssConstruct)?;
@@ -213,6 +218,8 @@ impl Round3 {
             receiver: None,
             body: dlog_proof.clone(),
         });
+
+        let vss_schemes = feldman_vss_list.iter().map(|x| x.vss.clone()).collect();
 
         Ok(Round4 {
             keys: self.keys.clone(),
@@ -233,7 +240,7 @@ impl Round3 {
     pub fn expects_messages(
         i: u16,
         n: u16,
-    ) -> Store<P2PMsgs<(VerifiableSS<Secp256k1>, Scalar<Secp256k1>)>> {
+    ) -> Store<P2PMsgs<FeldmanVSS>> {
         containers::P2PMsgsStore::new(i, n)
     }
 }

@@ -19,6 +19,7 @@ use self::messages::{
     ProtocolMessage,
     broadcast_message::KeyGenBroadcastMessage,
     decommit_message::KeyGenDecommitMessage,
+    feldman_vss::FeldmanVSS,
     M
 };
 
@@ -39,7 +40,7 @@ pub struct Keygen {
 
     msgs1: Option<Store<BroadcastMsgs<KeyGenBroadcastMessage>>>,
     msgs2: Option<Store<BroadcastMsgs<KeyGenDecommitMessage>>>,
-    msgs3: Option<Store<P2PMsgs<(VerifiableSS<Secp256k1>, Scalar<Secp256k1>)>>>,
+    msgs3: Option<Store<P2PMsgs<FeldmanVSS>>>,
     msgs4: Option<Store<BroadcastMsgs<DLogProof<Secp256k1, Sha256>>>>,
 
     msgs_queue: Vec<Msg<ProtocolMessage>>,

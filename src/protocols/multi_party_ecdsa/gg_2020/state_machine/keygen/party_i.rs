@@ -29,6 +29,7 @@ use sha2::Sha256;
 
 use super::messages::broadcast_message::KeyGenBroadcastMessage;
 use super::messages::decommit_message::KeyGenDecommitMessage;
+use super::messages::feldman_vss::FeldmanVSS;
 
 
 use paillier::{
@@ -224,21 +225,22 @@ impl Keys {
         &self,
         params: &Parameters,
         y_vec: &[Point<Secp256k1>],
-        secret_shares_vec: &[Scalar<Secp256k1>],
-        vss_scheme_vec: &[VerifiableSS<Secp256k1>],
+        // secret_shares_vec: &[Scalar<Secp256k1>],
+        // vss_scheme_vec: &[VerifiableSS<Secp256k1>],
+        feldman_vss_vec: &Vec<FeldmanVSS>,
         index: usize,
     ) -> Result<(SharedKeys, DLogProof<Secp256k1, Sha256>), ErrorType> {
         let mut bad_actors_vec = Vec::new();
         assert_eq!(y_vec.len(), usize::from(params.share_count));
-        assert_eq!(secret_shares_vec.len(), usize::from(params.share_count));
-        assert_eq!(vss_scheme_vec.len(), usize::from(params.share_count));
+        assert_eq!(feldman_vss_vec.len(), usize::from(params.share_count));
+        // assert_eq!(vss_scheme_vec.len(), usize::from(params.share_count));
 
         let correct_ss_verify = (0..y_vec.len())
             .map(|i| {
-                let res = vss_scheme_vec[i]
-                    .validate_share(&secret_shares_vec[i], index.try_into().unwrap())
+                let res = feldman_vss_vec[i].vss
+                    .validate_share(&feldman_vss_vec[i].share.1, index.try_into().unwrap())
                     .is_ok()
-                    && vss_scheme_vec[i].commitments[0] == y_vec[i];
+                    && feldman_vss_vec[i].vss.commitments[0] == y_vec[i];
                 if !res {
                     bad_actors_vec.push(i);
                     false
@@ -257,9 +259,9 @@ impl Keys {
             let (head, tail) = y_vec.split_at(1);
             let y = tail.iter().fold(head[0].clone(), |acc, x| acc + x);
 
-            let x_i = secret_shares_vec
+            let x_i = feldman_vss_vec
                 .iter()
-                .fold(Scalar::<Secp256k1>::zero(), |acc, x| acc + x);
+                .fold(Scalar::<Secp256k1>::zero(), |acc, x| acc + x.share.1.clone());
             let dlog_proof = DLogProof::prove(&x_i);
             Ok((SharedKeys { y, x_i }, dlog_proof))
         } else {

@@ -1,5 +1,6 @@
 pub mod broadcast_message;
 pub mod decommit_message;
+pub mod feldman_vss;
 
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
@@ -12,6 +13,7 @@ use sha2::Sha256;
 
 use self::broadcast_message::KeyGenBroadcastMessage;
 use self::decommit_message::KeyGenDecommitMessage;
+use self::feldman_vss::FeldmanVSS;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProtocolMessage(pub M);
@@ -20,7 +22,8 @@ pub struct ProtocolMessage(pub M);
 pub enum M {
     Round1(KeyGenBroadcastMessage),
     Round2(KeyGenDecommitMessage),
-    Round3((VerifiableSS<Secp256k1>, Scalar<Secp256k1>)),
+    // Round3((VerifiableSS<Secp256k1>, Scalar<Secp256k1>)),
+    Round3(FeldmanVSS),
     Round4(DLogProof<Secp256k1, Sha256>),
 }
 
