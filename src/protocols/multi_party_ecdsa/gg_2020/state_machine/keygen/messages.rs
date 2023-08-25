@@ -1,10 +1,10 @@
+pub mod parameters;
 pub mod broadcast_message;
 pub mod decommit_message;
 pub mod feldman_vss;
 
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
-use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
-use curv::elliptic::curves::{Secp256k1, Scalar};
+use curv::elliptic::curves::Secp256k1;
 use serde::{
     Serialize,
     Deserialize,
@@ -22,7 +22,6 @@ pub struct ProtocolMessage(pub M);
 pub enum M {
     Round1(KeyGenBroadcastMessage),
     Round2(KeyGenDecommitMessage),
-    // Round3((VerifiableSS<Secp256k1>, Scalar<Secp256k1>)),
     Round3(FeldmanVSS),
     Round4(DLogProof<Secp256k1, Sha256>),
 }

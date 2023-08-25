@@ -1,21 +1,14 @@
-use curv::BigInt;
-use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
-use curv::elliptic::curves::{Point, Secp256k1, Scalar};
-use paillier::EncryptionKey;
+use curv::elliptic::curves::{Secp256k1, Scalar};
 use serde::{
     Serialize,
     Deserialize,
 };
-use sha2::Sha256;
-use zk_paillier::zkproofs::{DLogStatement, NiCorrectKeyProof, CompositeDLogProof};
-
-pub type SecretShare = (usize, Scalar<Secp256k1>);
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FeldmanVSS {
     pub vss: VerifiableSS<Secp256k1>, 
-    pub share: SecretShare,
+    pub share: Scalar<Secp256k1>,
 }
 
 // zengo

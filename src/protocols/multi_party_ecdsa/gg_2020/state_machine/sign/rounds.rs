@@ -23,7 +23,7 @@ use curv::cryptographic_primitives::proofs::sigma_valid_pedersen::PedersenProof;
 use gg20::party_i::{
     LocalSignature, SignBroadcastPhase1, SignDecommitPhase1, SignKeys, SignatureRecid,
 };
-use gg20::state_machine::keygen::LocalKey;
+use gg20::state_machine::keygen::local_key::LocalKey;
 use gg20::ErrorType;
 
 type Result<T, E = Error> = std::result::Result<T, E>;

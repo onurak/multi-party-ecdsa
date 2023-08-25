@@ -34,7 +34,7 @@ use crate::utilities::mta::MessageA;
 use crate::protocols::multi_party_ecdsa::gg_2020 as gg20;
 use curv::elliptic::curves::secp256_k1::Secp256k1;
 use gg20::party_i::{SignBroadcastPhase1, SignDecommitPhase1, SignatureRecid};
-use gg20::state_machine::keygen::LocalKey;
+use gg20::state_machine::keygen::local_key::LocalKey;
 
 mod fmt;
 mod rounds;
