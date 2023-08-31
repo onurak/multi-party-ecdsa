@@ -35,6 +35,7 @@ use crate::protocols::gg_2020 as gg20;
 use curv::elliptic::curves::secp256_k1::Secp256k1;
 use gg20::party_i::{SignBroadcastPhase1, SignDecommitPhase1, SignatureRecid};
 use gg20::state_machine::keygen::local_key::LocalKey;
+use gg20::state_machine::keygen::messages::parameters::Parameters;
 
 mod fmt;
 mod rounds;
@@ -83,7 +84,7 @@ impl OfflineStage {
             return Err(Error::InvalidPartyIndex);
         }
 
-        let keygen_n = local_key.n;
+        let keygen_n = local_key.key_params.share_count;
         if s_l.iter().any(|&i| i == 0 || i > keygen_n) {
             return Err(Error::InvalidSl);
         }

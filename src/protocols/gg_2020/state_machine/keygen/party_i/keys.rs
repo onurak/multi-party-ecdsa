@@ -15,6 +15,7 @@ use crate::protocols::gg_2020::state_machine::keygen::{
     messages::feldman_vss::FeldmanVSS,
     messages::parameters::Parameters,
     party_i::shared_keys::SharedKeys,
+    party_i::paillier_keys::PaillierKeys,
 };
 
 
@@ -29,6 +30,7 @@ use zk_paillier::zkproofs::{CompositeDLogProof, DLogStatement};
 use crate::protocols::gg_2020::ErrorType;
 use std::convert::TryInto;
 
+
 const SECURITY: usize = 256;
 const PAILLIER_MIN_BIT_LENGTH: usize = 2047;
 const PAILLIER_MAX_BIT_LENGTH: usize = 2048;
@@ -36,12 +38,13 @@ const PAILLIER_MAX_BIT_LENGTH: usize = 2048;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Keys<E: Curve = Secp256k1> {
+    
     pub u_i: Scalar<E>,
     pub y_i: Point<E>,
-    pub dk: DecryptionKey,
-    pub ek: EncryptionKey,
+    pub paillier_keys: PaillierKeys,
+
     pub party_index: usize,
-    pub N_tilde: BigInt,
+    pub n_tilde: BigInt,
     pub h1: BigInt,
     pub h2: BigInt,
     pub xhi: BigInt,
@@ -55,15 +58,14 @@ impl Keys {
         let y = Point::generator() * &u;
 
         let (ek, dk) = Paillier::keypair_safe_primes().keys();
-        let (N_tilde, h1, h2, xhi, xhi_inv) = super::generate_h1_h2_n_tilde();
+        let (n_tilde, h1, h2, xhi, xhi_inv) = super::generate_h1_h2_n_tilde();
 
         Self {
             u_i: u,
             y_i: y,
-            dk,
-            ek,
+            paillier_keys: PaillierKeys::new(dk, ek),
             party_index: index,
-            N_tilde,
+            n_tilde,
             h1,
             h2,
             xhi,
@@ -75,15 +77,15 @@ impl Keys {
         &self,
     ) -> (KeyGenBroadcastMessage, KeyGenDecommitMessage) {
         let blind_factor = BigInt::sample(SECURITY);
-        let correct_key_proof = NiCorrectKeyProof::proof(&self.dk, None);
+        let correct_key_proof = NiCorrectKeyProof::proof(&self.paillier_keys.dk, None);
 
         let dlog_statement_base_h1 = DLogStatement {
-            N: self.N_tilde.clone(),
+            N: self.n_tilde.clone(),
             g: self.h1.clone(),
             ni: self.h2.clone(),
         };
         let dlog_statement_base_h2 = DLogStatement {
-            N: self.N_tilde.clone(),
+            N: self.n_tilde.clone(),
             g: self.h2.clone(),
             ni: self.h1.clone(),
         };
@@ -98,7 +100,7 @@ impl Keys {
             &blind_factor,
         );
         let bcm1 = KeyGenBroadcastMessage {
-            e: self.ek.clone(),
+            e: self.paillier_keys.ek.clone(),
             dlog_statement: dlog_statement_base_h1,
             com,
             correct_key_proof,

@@ -1,7 +1,10 @@
+use std::collections::BTreeSet;
+
 use round_based::containers::push::Push;
 use round_based::containers::{self, BroadcastMsgs, Store};
 use round_based::Msg;
 
+use crate::protocols::gg_2020::state_machine::keygen::messages::parameters::Parameters;
 use crate::protocols::gg_2020::state_machine::keygen::{
     messages::{
         broadcast_message::KeyGenBroadcastMessage,
@@ -16,9 +19,10 @@ pub struct Round1 {
     pub(super) keys: Keys,
     pub(super) bc1: KeyGenBroadcastMessage,
     pub(super) decom1: KeyGenDecommitMessage,
-    pub(super) party_i: u16,
-    pub(super) t: u16,
-    pub(super) n: u16,
+
+    pub(super) own_party_index: u16,
+    pub(super) other_parties: BTreeSet<u16>,
+    pub(super) key_params: Parameters,
 }
 
 impl Round1 {
@@ -31,18 +35,18 @@ impl Round1 {
         O: Push<Msg<KeyGenDecommitMessage>>,
     {
         output.push(Msg {
-            sender: self.party_i,
+            sender: self.own_party_index,
             receiver: None,
             body: self.decom1.clone(),
         });
         Ok(Round2 {
             keys: self.keys,
-            received_comm: input.into_vec_including_me(self.bc1),
+            commitments: input.into_vec_including_me(self.bc1),
             decom: self.decom1,
 
-            party_i: self.party_i,
-            t: self.t,
-            n: self.n,
+            own_party_index: self.own_party_index,
+            other_parties: self.other_parties.clone(),
+            key_params: self.key_params,
         })
     }
     pub fn is_expensive(&self) -> bool {

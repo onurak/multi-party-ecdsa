@@ -8,7 +8,7 @@ pub mod types;
 #[cfg(test)]
 pub mod test;
 
-use std::mem::replace;
+use std::{mem::replace, collections::BTreeSet};
 use sha2::Sha256;
 use curv::{
     cryptographic_primitives::proofs::sigma_dlog::DLogProof,
@@ -32,7 +32,8 @@ use crate::protocols::gg_2020::state_machine::keygen::{
         broadcast_message::KeyGenBroadcastMessage,
         decommit_message::KeyGenDecommitMessage,
         feldman_vss::FeldmanVSS,
-        M
+        M,
+        parameters::Parameters,
     },
     types::KeygenResult,
     rounds::{
@@ -80,8 +81,16 @@ impl Keygen {
         if i == 0 || i > n {
             return Err(KeygenError::InvalidPartyIndex);
         }
+
+
+        let other_parties: BTreeSet<u16> = (0..=n).into_iter().filter(|x| *x != i).collect();
+
         let mut state = Self {
-            round: R::Round0(Round0 { party_i: i, t, n }),
+            round: R::Round0(Round0 { 
+                own_party_index: i, 
+                key_params: Parameters::new(t, n),
+                other_parties
+            }),
 
             msgs1: Some(Round1::expects_messages(i, n)),
             msgs2: Some(Round2::expects_messages(i, n)),

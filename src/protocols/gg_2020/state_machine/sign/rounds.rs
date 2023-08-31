@@ -81,7 +81,7 @@ impl Round0 {
         );
         let (bc1, decom1) = sign_keys.phase1_broadcast();
 
-        let party_ek = self.local_key.paillier_key_vec[usize::from(self.local_key.i - 1)].clone();
+        let party_ek = self.local_key.paillier_key_vec[usize::from(self.local_key.own_party_index - 1)].clone();
         let m_a = MessageA::a(&sign_keys.k_i, &party_ek, &self.local_key.h1_h2_n_tilde_vec);
 
         output.push(Msg {
@@ -629,7 +629,7 @@ impl Round6 {
             &self.protocol_output.t_vec,
         )
         .map_err(Error::Round6VerifyProof)?;
-        LocalSignature::phase6_check_S_i_sum(&self.protocol_output.local_key.y_sum_s, &S_i_vec)
+        LocalSignature::phase6_check_S_i_sum(&self.protocol_output.local_key.public_key, &S_i_vec)
             .map_err(Error::Round6CheckSig)?;
 
         Ok(self.protocol_output)
@@ -656,7 +656,7 @@ pub struct CompletedOfflineStage {
 
 impl CompletedOfflineStage {
     pub fn public_key(&self) -> &Point<Secp256k1> {
-        &self.local_key.y_sum_s
+        &self.local_key.public_key
     }
 }
 
@@ -678,7 +678,7 @@ impl Round7 {
             message,
             &completed_offline_stage.R,
             &completed_offline_stage.sigma_i,
-            &completed_offline_stage.local_key.y_sum_s,
+            &completed_offline_stage.local_key.public_key,
         );
         let partial = PartialSignature(local_signature.s_i.clone());
         Ok((Self { local_signature }, partial))

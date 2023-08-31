@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
 use curv::elliptic::curves::{secp256_k1::Secp256k1, Point};
@@ -26,9 +28,9 @@ pub struct Round4 {
     pub(super) own_dlog_proof: DLogProof<Secp256k1, Sha256>,
     pub(super) vss_vec: Vec<VerifiableSS<Secp256k1>>,
 
-    pub(super) party_i: u16,
-    pub(super) t: u16,
-    pub(super) n: u16,
+    pub(super) own_party_index: u16,
+    pub(super) other_parties: BTreeSet<u16>,
+    pub(super) key_params: Parameters,
 }
 
 impl Round4 {
@@ -36,24 +38,21 @@ impl Round4 {
         self,
         input: BroadcastMsgs<DLogProof<Secp256k1, Sha256>>,
     ) -> ProceedResult<LocalKey<Secp256k1>> {
-        let params = Parameters {
-            threshold: self.t,
-            share_count: self.n,
-        };
+        
         let dlog_proofs = input.into_vec_including_me(self.own_dlog_proof.clone());
 
         Keys::verify_dlog_proofs_check_against_vss(
-            &params,
+            &self.key_params,
             &dlog_proofs,
             &self.y_vec,
             &self.vss_vec,
         )
         .map_err(ProceedError::Round4VerifyDLogProof)?;
-        let pk_vec = (0..params.share_count as usize)
+        let pk_vec = (0..self.key_params.share_count as usize)
             .map(|i| dlog_proofs[i].pk.clone())
             .collect::<Vec<Point<Secp256k1>>>();
 
-        let paillier_key_vec = (0..params.share_count)
+        let paillier_key_vec = (0..self.key_params.share_count)
             .map(|i| self.bc_vec[i as usize].e.clone())
             .collect::<Vec<EncryptionKey>>();
         let h1_h2_n_tilde_vec = self
@@ -66,19 +65,19 @@ impl Round4 {
         let y_sum = tail.iter().fold(head[0].clone(), |acc, x| acc + x);
 
         let local_key = LocalKey {
-            paillier_dk: self.keys.dk,
+            paillier_dk: self.keys.paillier_keys.dk,
             pk_vec,
 
             keys_linear: self.shared_keys.clone(),
             paillier_key_vec,
-            y_sum_s: y_sum,
             h1_h2_n_tilde_vec,
 
-            vss_scheme: self.vss_vec[usize::from(self.party_i - 1)].clone(),
+            vss_scheme: self.vss_vec[usize::from(self.own_party_index - 1)].clone(),
 
-            i: self.party_i,
-            t: self.t,
-            n: self.n,
+            own_party_index: self.own_party_index,   
+            other_parties: self.other_parties.clone(),         
+            public_key: y_sum,
+            key_params: self.key_params,
         };
 
         Ok(local_key)

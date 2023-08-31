@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
 use curv::elliptic::curves::{secp256_k1::Secp256k1, Point, Scalar};
@@ -27,9 +29,9 @@ pub struct Round3 {
     pub(super) own_vss: VerifiableSS<Secp256k1>,
     pub(super) own_share: Scalar<Secp256k1>,
 
-    pub(super) party_i: u16,
-    pub(super) t: u16,
-    pub(super) n: u16,
+    pub(super) own_party_index: u16,
+    pub(super) other_parties: BTreeSet<u16>,
+    pub(super) key_params: Parameters,
 }
 
 impl Round3 {
@@ -41,10 +43,6 @@ impl Round3 {
     where
         O: Push<Msg<DLogProof<Secp256k1, Sha256>>>,
     {
-        let params = Parameters {
-            threshold: self.t,
-            share_count: self.n,
-        };
         
         let feldman_vss_list: Vec<FeldmanVSS> = input
             .into_vec_including_me(FeldmanVSS{vss:self.own_vss.clone(), share: self.own_share.clone()});
@@ -52,17 +50,17 @@ impl Round3 {
         let (shared_keys, dlog_proof) = self
             .keys
             .phase2_verify_vss_construct_keypair_phase3_pok_dlog(
-                &params,
+                &self.key_params,
                 &self.y_vec,
                 // &party_shares,
                 // &vss_schemes,
                 &feldman_vss_list,
-                self.party_i.into(),
+                self.own_party_index.into(),
             )
             .map_err(ProceedError::Round3VerifyVssConstruct)?;
 
         output.push(Msg {
-            sender: self.party_i,
+            sender: self.own_party_index,
             receiver: None,
             body: dlog_proof.clone(),
         });
@@ -77,9 +75,9 @@ impl Round3 {
             own_dlog_proof: dlog_proof,
             vss_vec: vss_schemes,
 
-            party_i: self.party_i,
-            t: self.t,
-            n: self.n,
+            own_party_index: self.own_party_index,
+            other_parties: self.other_parties.clone(),
+            key_params: self.key_params,
         })
     }
     pub fn is_expensive(&self) -> bool {

@@ -1,11 +1,13 @@
 pub mod keys;
 pub mod shared_keys;
+pub mod paillier_keys;
 
 use curv::arithmetic::traits::*;
 use curv::BigInt;
 use paillier::{
     KeyGeneration, Paillier, 
 };
+use serde::{Serialize, Deserialize};
 
 pub fn generate_h1_h2_n_tilde() -> (BigInt, BigInt, BigInt, BigInt, BigInt) {
 
