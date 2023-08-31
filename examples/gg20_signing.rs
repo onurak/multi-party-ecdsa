@@ -7,7 +7,7 @@ use structopt::StructOpt;
 use curv::arithmetic::Converter;
 use curv::BigInt;
 
-use multi_party_ecdsa::protocols::multi_party_ecdsa::gg_2020::state_machine::sign::{
+use multi_party_ecdsa::protocols::gg_2020::state_machine::sign::{
     OfflineStage, SignManual,
 };
 use round_based::async_runtime::AsyncProtocol;
