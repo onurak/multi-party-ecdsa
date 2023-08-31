@@ -11,10 +11,8 @@ use crate::protocols::multi_party_ecdsa::gg_2020::state_machine::keygen::{
         broadcast_message::KeyGenBroadcastMessage,
         parameters::Parameters,
     },
-    rounds::{
-        Result,
-        ProceedError,
-    }, 
+    types::ProceedResult, 
+    error::proceed_error::ProceedError,
     party_i::keys::Keys,   
     party_i::shared_keys::SharedKeys,    
     local_key::LocalKey,
@@ -37,7 +35,7 @@ impl Round4 {
     pub fn proceed(
         self,
         input: BroadcastMsgs<DLogProof<Secp256k1, Sha256>>,
-    ) -> Result<LocalKey<Secp256k1>> {
+    ) -> ProceedResult<LocalKey<Secp256k1>> {
         let params = Parameters {
             threshold: self.t,
             share_count: self.n,

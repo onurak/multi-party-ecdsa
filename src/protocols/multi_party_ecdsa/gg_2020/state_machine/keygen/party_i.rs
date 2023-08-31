@@ -7,7 +7,7 @@ use paillier::{
     KeyGeneration, Paillier, 
 };
 
-pub fn generate_h1_h2_N_tilde() -> (BigInt, BigInt, BigInt, BigInt, BigInt) {
+pub fn generate_h1_h2_n_tilde() -> (BigInt, BigInt, BigInt, BigInt, BigInt) {
 
     let (ek_tilde, dk_tilde) = Paillier::keypair_safe_primes().keys();
     let one = BigInt::one();

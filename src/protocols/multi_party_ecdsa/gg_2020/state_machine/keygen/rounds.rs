@@ -4,18 +4,15 @@ pub mod round_2;
 pub mod round_3;
 pub mod round_4;
 
+use curv::elliptic::curves::Secp256k1;
+use crate::protocols::multi_party_ecdsa::gg_2020::state_machine::keygen::local_key::LocalKey;
 
-use thiserror::Error;
-use crate::protocols::multi_party_ecdsa::gg_2020::ErrorType;
-
-pub type Result<T> = std::result::Result<T, ProceedError>;
-
-#[derive(Debug, Error)]
-pub enum ProceedError {
-    #[error("round 2: verify commitments: {0:?}")]
-    Round2VerifyCommitments(ErrorType),
-    #[error("round 3: verify vss construction: {0:?}")]
-    Round3VerifyVssConstruct(ErrorType),
-    #[error("round 4: verify dlog proof: {0:?}")]
-    Round4VerifyDLogProof(ErrorType),
+pub enum R {
+    Round0(round_0::Round0),
+    Round1(round_1::Round1),
+    Round2(round_2::Round2),
+    Round3(round_3::Round3),
+    Round4(round_4::Round4),
+    Final(LocalKey<Secp256k1>),
+    Gone,
 }

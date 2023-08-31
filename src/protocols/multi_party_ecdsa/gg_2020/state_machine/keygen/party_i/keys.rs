@@ -55,7 +55,7 @@ impl Keys {
         let y = Point::generator() * &u;
 
         let (ek, dk) = Paillier::keypair_safe_primes().keys();
-        let (N_tilde, h1, h2, xhi, xhi_inv) = super::generate_h1_h2_N_tilde();
+        let (N_tilde, h1, h2, xhi, xhi_inv) = super::generate_h1_h2_n_tilde();
 
         Self {
             u_i: u,

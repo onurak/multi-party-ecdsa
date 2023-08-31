@@ -4,15 +4,15 @@ use curv::elliptic::curves::secp256_k1::Secp256k1;
 use round_based::containers::*;
 use round_based::{Msg, StateMachine};
 
-use super::{
+use crate::protocols::multi_party_ecdsa::gg_2020::state_machine::keygen::{
     Keygen,
     local_key::LocalKey,
     messages::{
         ProtocolMessage,
         M,
     },
-    Result,
-    Error,
+    types::KeygenResult,
+    error::keygen_error::KeygenError,
     R,
 };
 
@@ -20,10 +20,10 @@ use super::{
 
 impl StateMachine for Keygen {
     type MessageBody = ProtocolMessage;
-    type Err = Error;
+    type Err = KeygenError;
     type Output = LocalKey<Secp256k1>;
 
-    fn handle_incoming(&mut self, msg: Msg<Self::MessageBody>) -> Result<()> {
+    fn handle_incoming(&mut self, msg: Msg<ProtocolMessage>) -> KeygenResult<()> {
         let current_round = self.current_round();
 
         match msg.body {
@@ -31,7 +31,7 @@ impl StateMachine for Keygen {
                 let store = self
                     .msgs1
                     .as_mut()
-                    .ok_or(Error::ReceivedOutOfOrderMessage {
+                    .ok_or(KeygenError::ReceivedOutOfOrderMessage {
                         current_round,
                         msg_round: 1,
                     })?;
@@ -41,14 +41,14 @@ impl StateMachine for Keygen {
                         receiver: msg.receiver,
                         body: m,
                     })
-                    .map_err(Error::HandleMessage)?;
+                    .map_err(KeygenError::HandleMessage)?;
                 self.proceed_round(false)
             }
             ProtocolMessage(M::Round2(m)) => {
                 let store = self
                     .msgs2
                     .as_mut()
-                    .ok_or(Error::ReceivedOutOfOrderMessage {
+                    .ok_or(KeygenError::ReceivedOutOfOrderMessage {
                         current_round,
                         msg_round: 2,
                     })?;
@@ -58,14 +58,14 @@ impl StateMachine for Keygen {
                         receiver: msg.receiver,
                         body: m,
                     })
-                    .map_err(Error::HandleMessage)?;
+                    .map_err(KeygenError::HandleMessage)?;
                 self.proceed_round(false)
             }
             ProtocolMessage(M::Round3(m)) => {
                 let store = self
                     .msgs3
                     .as_mut()
-                    .ok_or(Error::ReceivedOutOfOrderMessage {
+                    .ok_or(KeygenError::ReceivedOutOfOrderMessage {
                         current_round,
                         msg_round: 3,
                     })?;
@@ -75,14 +75,14 @@ impl StateMachine for Keygen {
                         receiver: msg.receiver,
                         body: m,
                     })
-                    .map_err(Error::HandleMessage)?;
+                    .map_err(KeygenError::HandleMessage)?;
                 self.proceed_round(false)
             }
             ProtocolMessage(M::Round4(m)) => {
                 let store = self
                     .msgs4
                     .as_mut()
-                    .ok_or(Error::ReceivedOutOfOrderMessage {
+                    .ok_or(KeygenError::ReceivedOutOfOrderMessage {
                         current_round,
                         msg_round: 4,
                     })?;
@@ -92,13 +92,13 @@ impl StateMachine for Keygen {
                         receiver: msg.receiver,
                         body: m,
                     })
-                    .map_err(Error::HandleMessage)?;
+                    .map_err(KeygenError::HandleMessage)?;
                 self.proceed_round(false)
             }
         }
     }
 
-    fn message_queue(&mut self) -> &mut Vec<Msg<Self::MessageBody>> {
+    fn message_queue(&mut self) -> &mut Vec<Msg<ProtocolMessage>> {
         &mut self.msgs_queue
     }
 
@@ -118,7 +118,7 @@ impl StateMachine for Keygen {
         }
     }
 
-    fn proceed(&mut self) -> Result<()> {
+    fn proceed(&mut self) -> KeygenResult<()> {
         self.proceed_round(true)
     }
 
@@ -134,10 +134,10 @@ impl StateMachine for Keygen {
         matches!(self.round, R::Final(_))
     }
 
-    fn pick_output(&mut self) -> Option<Result<Self::Output>> {
+    fn pick_output(&mut self) -> Option<KeygenResult<LocalKey<Secp256k1>>> {
         match self.round {
             R::Final(_) => (),
-            R::Gone => return Some(Err(Error::DoublePickOutput)),
+            R::Gone => return Some(Err(KeygenError::DoublePickOutput)),
             _ => return None,
         }
 

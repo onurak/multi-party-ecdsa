@@ -8,9 +8,9 @@ use crate::protocols::multi_party_ecdsa::gg_2020::state_machine::keygen::{
         decommit_message::KeyGenDecommitMessage,
     },
     rounds::{
-        Result, 
         round_2::Round2,
     },
+    types::ProceedResult, 
     party_i::keys::Keys,
 }; 
 
@@ -28,7 +28,7 @@ impl Round1 {
         self,
         input: BroadcastMsgs<KeyGenBroadcastMessage>,
         mut output: O,
-    ) -> Result<Round2>
+    ) -> ProceedResult<Round2>
     where
         O: Push<Msg<KeyGenDecommitMessage>>,
     {

@@ -9,11 +9,9 @@ use crate::protocols::multi_party_ecdsa::gg_2020::state_machine::keygen::{
         feldman_vss::FeldmanVSS,
         parameters::Parameters,
     },
-    rounds::{
-        round_3::Round3,
-        Result,
-        ProceedError,
-    }, 
+    types::ProceedResult, 
+    rounds::round_3::Round3, 
+    error::proceed_error::ProceedError,
     party_i::keys::Keys,    
 };
 
@@ -34,7 +32,7 @@ impl Round2 {
         self,
         input: BroadcastMsgs<KeyGenDecommitMessage>,
         mut output: O,
-    ) -> Result<Round3>
+    ) -> ProceedResult<Round3>
     where
         O: Push<Msg<FeldmanVSS>>,
     {

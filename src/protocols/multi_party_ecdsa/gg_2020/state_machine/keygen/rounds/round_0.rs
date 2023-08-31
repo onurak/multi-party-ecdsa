@@ -5,7 +5,7 @@ use round_based::Msg;
 use crate::protocols::multi_party_ecdsa::gg_2020::state_machine::keygen::{
     messages::broadcast_message::KeyGenBroadcastMessage,
     rounds::round_1::Round1,
-    rounds::Result, 
+    types::ProceedResult, 
     party_i::keys::Keys,
 }; 
 
@@ -16,7 +16,7 @@ pub struct Round0 {
 }
 
 impl Round0 {
-    pub fn proceed<O>(self, mut output: O) -> Result<Round1>
+    pub fn proceed<O>(self, mut output: O) -> ProceedResult<Round1>
     where
         O: Push<Msg<KeyGenBroadcastMessage>>,
     {
