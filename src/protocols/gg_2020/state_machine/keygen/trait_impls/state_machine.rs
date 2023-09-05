@@ -4,6 +4,7 @@ use curv::elliptic::curves::secp256_k1::Secp256k1;
 use round_based::containers::*;
 use round_based::{Msg, StateMachine};
 
+use crate::protocols::gg_2020::state_machine::keygen::messages::address::Address;
 use crate::protocols::gg_2020::state_machine::keygen::{
     Keygen,
     local_key::LocalKey,
@@ -36,11 +37,19 @@ impl StateMachine for Keygen {
                         current_round,
                         msg_round: 1,
                     })?;
+
+                let mut m_mut = m.clone();
+                m_mut.sender = msg.sender;
+                m_mut.recipient = Address::Broadcast;
+                if let Some(receiver) = msg.receiver {
+                    m_mut.recipient = Address::Peer(receiver);
+                }
+
                 store
                     .push_msg(Msg {
                         sender: msg.sender,
                         receiver: msg.receiver,
-                        body: m,
+                        body: m_mut,
                     })
                     .map_err(KeygenError::HandleMessage)?;
                 self.proceed_round(false)
@@ -53,11 +62,19 @@ impl StateMachine for Keygen {
                         current_round,
                         msg_round: 2,
                     })?;
+
+                let mut m_mut = m.clone();
+                m_mut.sender = msg.sender;
+                m_mut.recipient = Address::Broadcast;
+                if let Some(receiver) = msg.receiver {
+                    m_mut.recipient = Address::Peer(receiver);
+                }
+    
                 store
                     .push_msg(Msg {
                         sender: msg.sender,
                         receiver: msg.receiver,
-                        body: m,
+                        body: m_mut,
                     })
                     .map_err(KeygenError::HandleMessage)?;
                 self.proceed_round(false)
@@ -70,11 +87,19 @@ impl StateMachine for Keygen {
                         current_round,
                         msg_round: 3,
                     })?;
+
+                let mut m_mut = m.clone();
+                m_mut.sender = msg.sender;
+                m_mut.recipient = Address::Broadcast;
+                if let Some(receiver) = msg.receiver {
+                    m_mut.recipient = Address::Peer(receiver);
+                }
+    
                 store
                     .push_msg(Msg {
                         sender: msg.sender,
                         receiver: msg.receiver,
-                        body: m,
+                        body: m_mut,
                     })
                     .map_err(KeygenError::HandleMessage)?;
                 self.proceed_round(false)
@@ -87,11 +112,19 @@ impl StateMachine for Keygen {
                         current_round,
                         msg_round: 4,
                     })?;
+
+                let mut m_mut = m.clone();
+                m_mut.sender = msg.sender;
+                m_mut.recipient = Address::Broadcast;
+                if let Some(receiver) = msg.receiver {
+                    m_mut.recipient = Address::Peer(receiver);
+                }
+    
                 store
                     .push_msg(Msg {
                         sender: msg.sender,
                         receiver: msg.receiver,
-                        body: m,
+                        body: m_mut,
                     })
                     .map_err(KeygenError::HandleMessage)?;
                 self.proceed_round(false)

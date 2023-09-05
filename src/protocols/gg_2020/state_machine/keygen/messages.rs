@@ -7,6 +7,7 @@ pub mod address;
 
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::elliptic::curves::Secp256k1;
+use round_based::Msg;
 use serde::{
     Serialize,
     Deserialize,
@@ -28,8 +29,6 @@ pub enum M {
     Round3(FeldmanVSS),
     Round4(Proof),
 }
-
-
 
 
 
