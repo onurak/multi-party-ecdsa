@@ -6,8 +6,8 @@ use round_based::Msg;
 
 use crate::protocols::gg_2020::state_machine::keygen::{
     messages::{
-        broadcast_message::KeyGenBroadcastMessage,
-        decommit_message::KeyGenDecommitMessage,
+        broadcast::KeyGenBroadcast,
+        decommit::KeyGenDecommit,
         feldman_vss::FeldmanVSS,
         parameters::Parameters,
     },
@@ -21,8 +21,8 @@ use crate::protocols::gg_2020::state_machine::keygen::{
 
 pub struct Round2 {
     pub(super) keys: Keys,
-    pub(super) commitments: Vec<KeyGenBroadcastMessage>,
-    pub(super) decom: KeyGenDecommitMessage,
+    pub(super) commitments: Vec<KeyGenBroadcast>,
+    pub(super) decom: KeyGenDecommit,
 
     pub(super) own_party_index: u16,
     pub(super) other_parties: BTreeSet<u16>,
@@ -32,7 +32,7 @@ pub struct Round2 {
 impl Round2 {
     pub fn proceed<O>(
         self,
-        input: BroadcastMsgs<KeyGenDecommitMessage>,
+        input: BroadcastMsgs<KeyGenDecommit>,
         mut output: O,
     ) -> ProceedResult<Round3>
     where
@@ -79,7 +79,7 @@ impl Round2 {
     pub fn is_expensive(&self) -> bool {
         true
     }
-    pub fn expects_messages(i: u16, n: u16) -> Store<BroadcastMsgs<KeyGenDecommitMessage>> {
+    pub fn expects_messages(i: u16, n: u16) -> Store<BroadcastMsgs<KeyGenDecommit>> {
         containers::BroadcastMsgsStore::new(i, n)
     }
 }

@@ -10,10 +10,11 @@ use curv::BigInt;
 use sha2::Sha256;
 
 use crate::protocols::gg_2020::state_machine::keygen::{
-    messages::broadcast_message::KeyGenBroadcastMessage,
-    messages::decommit_message::KeyGenDecommitMessage,
+    messages::broadcast::KeyGenBroadcast,
+    messages::decommit::KeyGenDecommit,
     messages::feldman_vss::FeldmanVSS,
     messages::parameters::Parameters,
+    messages::proof::Proof,
     party_i::shared_keys::SharedKeys,
     party_i::paillier_keys::PaillierKeys,
 };
@@ -75,7 +76,7 @@ impl Keys {
 
     pub fn phase1_broadcast_phase3_proof_of_correct_key_proof_of_correct_h1h2(
         &self,
-    ) -> (KeyGenBroadcastMessage, KeyGenDecommitMessage) {
+    ) -> (KeyGenBroadcast, KeyGenDecommit) {
         let blind_factor = BigInt::sample(SECURITY);
         let correct_key_proof = NiCorrectKeyProof::proof(&self.paillier_keys.dk, None);
 
@@ -99,7 +100,7 @@ impl Keys {
             &BigInt::from_bytes(self.y_i.to_bytes(true).as_ref()),
             &blind_factor,
         );
-        let bcm1 = KeyGenBroadcastMessage {
+        let bcm1 = KeyGenBroadcast {
             e: self.paillier_keys.ek.clone(),
             dlog_statement: dlog_statement_base_h1,
             com,
@@ -107,7 +108,7 @@ impl Keys {
             composite_dlog_proof_base_h1,
             composite_dlog_proof_base_h2,
         };
-        let decom1 = KeyGenDecommitMessage {
+        let decom1 = KeyGenDecommit {
             blind_factor,
             y_i: self.y_i.clone(),
         };
@@ -117,8 +118,8 @@ impl Keys {
     pub fn phase1_verify_com_phase3_verify_correct_key_verify_dlog_phase2_distribute(
         &self,
         params: &Parameters,
-        decom_vec: &[KeyGenDecommitMessage],
-        bc1_vec: &[KeyGenBroadcastMessage],
+        decom_vec: &[KeyGenDecommit],
+        bc1_vec: &[KeyGenBroadcast],
     ) -> Result<(VerifiableSS<Secp256k1>, Vec<Scalar<Secp256k1>>, usize), ErrorType> {
         let mut bad_actors_vec = Vec::new();
         // test length:
@@ -184,7 +185,7 @@ impl Keys {
         // vss_scheme_vec: &[VerifiableSS<Secp256k1>],
         feldman_vss_vec: &Vec<FeldmanVSS>,
         index: usize,
-    ) -> Result<(SharedKeys, DLogProof<Secp256k1, Sha256>), ErrorType> {
+    ) -> Result<(SharedKeys, Proof), ErrorType> {
         let mut bad_actors_vec = Vec::new();
         assert_eq!(y_vec.len(), usize::from(params.share_count));
         assert_eq!(feldman_vss_vec.len(), usize::from(params.share_count));
@@ -218,7 +219,8 @@ impl Keys {
                 .iter()
                 .fold(Scalar::<Secp256k1>::zero(), |acc, x| acc + x.share.clone());
             let dlog_proof = DLogProof::prove(&x_i);
-            Ok((SharedKeys { y, x_i }, dlog_proof))
+            let proof = Proof { proof: dlog_proof};
+            Ok((SharedKeys { y, x_i }, proof))
         } else {
             Err(err_type)
         }
@@ -262,7 +264,7 @@ impl Keys {
 
     pub fn verify_dlog_proofs_check_against_vss(
         params: &Parameters,
-        dlog_proofs_vec: &[DLogProof<Secp256k1, Sha256>],
+        dlog_proofs_vec: &[Proof],
         y_vec: &[Point<Secp256k1>],
         vss_vec: &[VerifiableSS<Secp256k1>],
     ) -> Result<(), ErrorType> {
@@ -272,8 +274,8 @@ impl Keys {
         let xi_commitments = Keys::get_commitments_to_xi(vss_vec);
         let xi_dlog_verify = (0..y_vec.len())
             .map(|i| {
-                let ver_res = DLogProof::verify(&dlog_proofs_vec[i]).is_ok();
-                let verify_against_vss = xi_commitments[i] == dlog_proofs_vec[i].pk;
+                let ver_res = DLogProof::verify(&dlog_proofs_vec[i].proof).is_ok();
+                let verify_against_vss = xi_commitments[i] == dlog_proofs_vec[i].proof.pk;
                 if !ver_res || !verify_against_vss {
                     bad_actors_vec.push(i);
                     false

@@ -10,9 +10,10 @@ use round_based::Msg;
 
 use crate::protocols::gg_2020::state_machine::keygen::{
     messages::{
-        broadcast_message::KeyGenBroadcastMessage,
+        broadcast::KeyGenBroadcast,
         feldman_vss::FeldmanVSS,
         parameters::Parameters,
+        proof::Proof,
     },
     types::ProceedResult, 
     rounds::round_4::Round4, 
@@ -24,7 +25,7 @@ pub struct Round3 {
     pub(super) keys: Keys,
 
     pub(super) y_vec: Vec<Point<Secp256k1>>,
-    pub(super) bc_vec: Vec<KeyGenBroadcastMessage>,
+    pub(super) bc_vec: Vec<KeyGenBroadcast>,
 
     pub(super) own_vss: VerifiableSS<Secp256k1>,
     pub(super) own_share: Scalar<Secp256k1>,
@@ -41,13 +42,13 @@ impl Round3 {
         mut output: O,
     ) -> ProceedResult<Round4>
     where
-        O: Push<Msg<DLogProof<Secp256k1, Sha256>>>,
+        O: Push<Msg<Proof>>,
     {
         
         let feldman_vss_list: Vec<FeldmanVSS> = input
             .into_vec_including_me(FeldmanVSS{vss:self.own_vss.clone(), share: self.own_share.clone()});
 
-        let (shared_keys, dlog_proof) = self
+        let (shared_keys, proof) = self
             .keys
             .phase2_verify_vss_construct_keypair_phase3_pok_dlog(
                 &self.key_params,
@@ -62,7 +63,7 @@ impl Round3 {
         output.push(Msg {
             sender: self.own_party_index,
             receiver: None,
-            body: dlog_proof.clone(),
+            body: proof.clone(),
         });
 
         let vss_schemes = feldman_vss_list.iter().map(|x| x.vss.clone()).collect();
@@ -72,7 +73,7 @@ impl Round3 {
             y_vec: self.y_vec.clone(),
             bc_vec: self.bc_vec,
             shared_keys,
-            own_dlog_proof: dlog_proof,
+            own_proof: proof,
             vss_vec: vss_schemes,
 
             own_party_index: self.own_party_index,

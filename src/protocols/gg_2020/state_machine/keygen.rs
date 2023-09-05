@@ -29,11 +29,12 @@ use crate::protocols::gg_2020::state_machine::keygen::{
     },
     messages::{
         ProtocolMessage,
-        broadcast_message::KeyGenBroadcastMessage,
-        decommit_message::KeyGenDecommitMessage,
+        broadcast::KeyGenBroadcast,
+        decommit::KeyGenDecommit,
         feldman_vss::FeldmanVSS,
         M,
         parameters::Parameters,
+        proof::Proof,
     },
     types::KeygenResult,
     rounds::{
@@ -49,10 +50,10 @@ use crate::protocols::gg_2020::state_machine::keygen::{
 pub struct Keygen {
     round: R,
 
-    msgs1: Option<Store<BroadcastMsgs<KeyGenBroadcastMessage>>>,
-    msgs2: Option<Store<BroadcastMsgs<KeyGenDecommitMessage>>>,
+    msgs1: Option<Store<BroadcastMsgs<KeyGenBroadcast>>>,
+    msgs2: Option<Store<BroadcastMsgs<KeyGenDecommit>>>,
     msgs3: Option<Store<P2PMsgs<FeldmanVSS>>>,
-    msgs4: Option<Store<BroadcastMsgs<DLogProof<Secp256k1, Sha256>>>>,
+    msgs4: Option<Store<BroadcastMsgs<Proof>>>,
 
     msgs_queue: Vec<Msg<ProtocolMessage>>,
 

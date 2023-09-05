@@ -29,7 +29,7 @@ use curv::elliptic::curves::{secp256_k1::Secp256k1, Curve, Point, Scalar};
 use curv::BigInt;
 use sha2::Sha256;
 
-use crate::protocols::gg_2020::state_machine::keygen::messages::broadcast_message::KeyGenBroadcastMessage;
+use crate::protocols::gg_2020::state_machine::keygen::messages::broadcast::KeyGenBroadcast;
 
 use crate::Error::{self, InvalidSig, Phase5BadSum, Phase6Error};
 use paillier::{

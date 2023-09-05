@@ -7,8 +7,8 @@ use round_based::Msg;
 use crate::protocols::gg_2020::state_machine::keygen::messages::parameters::Parameters;
 use crate::protocols::gg_2020::state_machine::keygen::{
     messages::{
-        broadcast_message::KeyGenBroadcastMessage,
-        decommit_message::KeyGenDecommitMessage,
+        broadcast::KeyGenBroadcast,
+        decommit::KeyGenDecommit,
     },
     rounds::round_2::Round2,
     types::ProceedResult, 
@@ -17,8 +17,8 @@ use crate::protocols::gg_2020::state_machine::keygen::{
 
 pub struct Round1 {
     pub(super) keys: Keys,
-    pub(super) bc1: KeyGenBroadcastMessage,
-    pub(super) decom1: KeyGenDecommitMessage,
+    pub(super) bc1: KeyGenBroadcast,
+    pub(super) decom1: KeyGenDecommit,
 
     pub(super) own_party_index: u16,
     pub(super) other_parties: BTreeSet<u16>,
@@ -28,11 +28,11 @@ pub struct Round1 {
 impl Round1 {
     pub fn proceed<O>(
         self,
-        input: BroadcastMsgs<KeyGenBroadcastMessage>,
+        input: BroadcastMsgs<KeyGenBroadcast>,
         mut output: O,
     ) -> ProceedResult<Round2>
     where
-        O: Push<Msg<KeyGenDecommitMessage>>,
+        O: Push<Msg<KeyGenDecommit>>,
     {
         output.push(Msg {
             sender: self.own_party_index,
@@ -52,7 +52,7 @@ impl Round1 {
     pub fn is_expensive(&self) -> bool {
         false
     }
-    pub fn expects_messages(i: u16, n: u16) -> Store<BroadcastMsgs<KeyGenBroadcastMessage>> {
+    pub fn expects_messages(i: u16, n: u16) -> Store<BroadcastMsgs<KeyGenBroadcast>> {
         containers::BroadcastMsgsStore::new(i, n)
     }
 }

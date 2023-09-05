@@ -11,7 +11,7 @@ use zk_paillier::zkproofs::{
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct KeyGenBroadcastMessage {
+pub struct KeyGenBroadcast {
     pub e: EncryptionKey,
     pub dlog_statement: DLogStatement,
     pub com: BigInt,

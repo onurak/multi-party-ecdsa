@@ -10,6 +10,7 @@ use crate::protocols::gg_2020::state_machine::keygen::{
     messages::{
         ProtocolMessage,
         M,
+        proof::Proof,
     },
     types::KeygenResult,
     error::keygen_error::KeygenError,

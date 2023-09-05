@@ -10,8 +10,9 @@ use zk_paillier::zkproofs::DLogStatement;
 
 use crate::protocols::gg_2020::state_machine::keygen::{
     messages::{
-        broadcast_message::KeyGenBroadcastMessage,
+        broadcast::KeyGenBroadcast,
         parameters::Parameters,
+        proof::Proof,
     },
     types::ProceedResult, 
     error::proceed_error::ProceedError,
@@ -23,9 +24,9 @@ use crate::protocols::gg_2020::state_machine::keygen::{
 pub struct Round4 {
     pub(super) keys: Keys,
     pub(super) y_vec: Vec<Point<Secp256k1>>,
-    pub(super) bc_vec: Vec<KeyGenBroadcastMessage>,
+    pub(super) bc_vec: Vec<KeyGenBroadcast>,
     pub(super) shared_keys: SharedKeys,
-    pub(super) own_dlog_proof: DLogProof<Secp256k1, Sha256>,
+    pub(super) own_proof: Proof,
     pub(super) vss_vec: Vec<VerifiableSS<Secp256k1>>,
 
     pub(super) own_party_index: u16,
@@ -36,10 +37,10 @@ pub struct Round4 {
 impl Round4 {
     pub fn proceed(
         self,
-        input: BroadcastMsgs<DLogProof<Secp256k1, Sha256>>,
+        input: BroadcastMsgs<Proof>,
     ) -> ProceedResult<LocalKey<Secp256k1>> {
         
-        let dlog_proofs = input.into_vec_including_me(self.own_dlog_proof.clone());
+        let dlog_proofs = input.into_vec_including_me(self.own_proof.clone());
 
         Keys::verify_dlog_proofs_check_against_vss(
             &self.key_params,
@@ -49,7 +50,7 @@ impl Round4 {
         )
         .map_err(ProceedError::Round4VerifyDLogProof)?;
         let pk_vec = (0..self.key_params.share_count as usize)
-            .map(|i| dlog_proofs[i].pk.clone())
+            .map(|i| dlog_proofs[i].proof.pk.clone())
             .collect::<Vec<Point<Secp256k1>>>();
 
         let paillier_key_vec = (0..self.key_params.share_count)
@@ -85,7 +86,7 @@ impl Round4 {
     pub fn is_expensive(&self) -> bool {
         true
     }
-    pub fn expects_messages(i: u16, n: u16) -> Store<BroadcastMsgs<DLogProof<Secp256k1, Sha256>>> {
+    pub fn expects_messages(i: u16, n: u16) -> Store<BroadcastMsgs<Proof>> {
         containers::BroadcastMsgsStore::new(i, n)
     }
 }

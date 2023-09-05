@@ -7,7 +7,7 @@ use serde::{
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct KeyGenDecommitMessage {
+pub struct KeyGenDecommit {
     pub blind_factor: BigInt,
     pub y_i: Point<Secp256k1>,
 }

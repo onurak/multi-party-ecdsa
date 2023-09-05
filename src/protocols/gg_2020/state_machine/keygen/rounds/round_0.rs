@@ -5,7 +5,7 @@ use round_based::containers::push::Push;
 use round_based::Msg;
 
 use crate::protocols::gg_2020::state_machine::keygen::{
-    messages::{broadcast_message::KeyGenBroadcastMessage, parameters::Parameters},
+    messages::{broadcast::KeyGenBroadcast, parameters::Parameters},
     rounds::round_1::Round1,
     types::ProceedResult, 
     party_i::keys::Keys,
@@ -20,7 +20,7 @@ pub struct Round0 {
 impl Round0 {
     pub fn proceed<O>(self, mut output: O) -> ProceedResult<Round1>
     where
-        O: Push<Msg<KeyGenBroadcastMessage>>,
+        O: Push<Msg<KeyGenBroadcast>>,
     {
         let party_keys = Keys::create_safe_prime(self.own_party_index as usize);
         let (bc1, decom1) =
