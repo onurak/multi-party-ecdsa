@@ -4,6 +4,7 @@ use round_based::containers::push::Push;
 use round_based::containers::{self, BroadcastMsgs, Store};
 use round_based::Msg;
 
+use crate::protocols::gg_2020::state_machine::keygen::messages::address::Address;
 use crate::protocols::gg_2020::state_machine::keygen::{
     messages::{
         broadcast::KeyGenBroadcast,
@@ -58,7 +59,12 @@ impl Round2 {
             output.push(Msg {
                 sender: self.own_party_index,
                 receiver: Some(i as u16 + 1),
-                body: FeldmanVSS { vss: vss_result.0.clone(), share: share.clone()},
+                body: FeldmanVSS { 
+                    vss: vss_result.0.clone(), 
+                    share: share.clone(),
+                    sender: self.own_party_index,
+                    recipient: Address::Peer(i as u16 + 1),
+                },
             })
         }
 

@@ -22,7 +22,7 @@ impl Round0 {
     where
         O: Push<Msg<KeyGenBroadcast>>,
     {
-        let party_keys = Keys::create_safe_prime(self.own_party_index as usize);
+        let party_keys = Keys::create_safe_prime(self.own_party_index);
         let (bc1, decom1) =
             party_keys.phase1_broadcast_phase3_proof_of_correct_key_proof_of_correct_h1h2();
 

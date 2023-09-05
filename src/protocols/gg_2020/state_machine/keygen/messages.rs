@@ -33,23 +33,24 @@ pub enum M {
 
 
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-pub enum Address {
-    Peer(u16),
-    Broadcast,
-}
+// #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+// pub enum Address {
+//     Peer(u16),
+//     Broadcast,
+// }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct InputMessage<BodyType> {
-    pub sender: u16,
-    pub body: BodyType,
-}
+// #[derive(Debug, Clone, Deserialize, Serialize)]
+// pub struct InputMessage<BodyType> {
+//     pub sender: u16,
+//     pub recipient: Address,
+//     pub body: BodyType,
+// }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct OutputMessage<BodyType> {
-    pub recipient: Address,
-    pub body: BodyType,
-}
+// #[derive(Debug, Clone, Deserialize, Serialize)]
+// pub struct OutputMessage<BodyType> {
+//     pub recipient: Address,
+//     pub body: BodyType,
+// }
 
 
 // ing

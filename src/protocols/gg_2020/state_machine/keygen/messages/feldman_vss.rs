@@ -5,10 +5,15 @@ use serde::{
     Deserialize,
 };
 
+use super::address::Address;
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FeldmanVSS {
     pub vss: VerifiableSS<Secp256k1>, 
     pub share: Scalar<Secp256k1>,
+    
+    pub sender: u16,
+    pub recipient: Address,
 }
 
 // zengo

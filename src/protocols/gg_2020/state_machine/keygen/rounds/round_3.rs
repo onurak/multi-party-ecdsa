@@ -14,6 +14,7 @@ use crate::protocols::gg_2020::state_machine::keygen::{
         feldman_vss::FeldmanVSS,
         parameters::Parameters,
         proof::Proof,
+        address::Address,
     },
     types::ProceedResult, 
     rounds::round_4::Round4, 
@@ -46,7 +47,12 @@ impl Round3 {
     {
         
         let feldman_vss_list: Vec<FeldmanVSS> = input
-            .into_vec_including_me(FeldmanVSS{vss:self.own_vss.clone(), share: self.own_share.clone()});
+            .into_vec_including_me(FeldmanVSS{
+                vss:self.own_vss.clone(), 
+                share: self.own_share.clone(),
+                sender: self.own_party_index,
+                recipient: Address::Broadcast,
+            });
 
         let (shared_keys, proof) = self
             .keys

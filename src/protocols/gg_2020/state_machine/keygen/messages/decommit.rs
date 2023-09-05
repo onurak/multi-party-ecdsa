@@ -5,11 +5,16 @@ use serde::{
     Deserialize,
 };
 
+use super::address::Address;
+
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct KeyGenDecommit {
     pub blind_factor: BigInt,
     pub y_i: Point<Secp256k1>,
+    
+    pub sender: u16,
+    pub recipient: Address,
 }
 
 // ing

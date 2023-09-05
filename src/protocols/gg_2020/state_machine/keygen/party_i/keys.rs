@@ -9,6 +9,7 @@ use curv::elliptic::curves::{secp256_k1::Secp256k1, Curve, Point, Scalar};
 use curv::BigInt;
 use sha2::Sha256;
 
+use crate::protocols::gg_2020::state_machine::keygen::messages::address::Address;
 use crate::protocols::gg_2020::state_machine::keygen::{
     messages::broadcast::KeyGenBroadcast,
     messages::decommit::KeyGenDecommit,
@@ -44,7 +45,7 @@ pub struct Keys<E: Curve = Secp256k1> {
     pub y_i: Point<E>,
     pub paillier_keys: PaillierKeys,
 
-    pub party_index: usize,
+    pub party_index: u16,
     pub n_tilde: BigInt,
     pub h1: BigInt,
     pub h2: BigInt,
@@ -54,7 +55,7 @@ pub struct Keys<E: Curve = Secp256k1> {
 
 impl Keys {
 
-    pub fn create_safe_prime(index: usize) -> Self {
+    pub fn create_safe_prime(index: u16) -> Self {
         let u = Scalar::<Secp256k1>::random();
         let y = Point::generator() * &u;
 
@@ -107,10 +108,16 @@ impl Keys {
             correct_key_proof,
             composite_dlog_proof_base_h1,
             composite_dlog_proof_base_h2,
+            
+            sender: self.party_index,
+            recipient: Address::Broadcast,
         };
         let decom1 = KeyGenDecommit {
             blind_factor,
             y_i: self.y_i.clone(),
+            
+            sender: self.party_index,
+            recipient: Address::Broadcast,
         };
         (bcm1, decom1)
     }
@@ -120,7 +127,7 @@ impl Keys {
         params: &Parameters,
         decom_vec: &[KeyGenDecommit],
         bc1_vec: &[KeyGenBroadcast],
-    ) -> Result<(VerifiableSS<Secp256k1>, Vec<Scalar<Secp256k1>>, usize), ErrorType> {
+    ) -> Result<(VerifiableSS<Secp256k1>, Vec<Scalar<Secp256k1>>, u16), ErrorType> {
         let mut bad_actors_vec = Vec::new();
         // test length:
         assert_eq!(decom_vec.len(), usize::from(params.share_count));
@@ -219,7 +226,11 @@ impl Keys {
                 .iter()
                 .fold(Scalar::<Secp256k1>::zero(), |acc, x| acc + x.share.clone());
             let dlog_proof = DLogProof::prove(&x_i);
-            let proof = Proof { proof: dlog_proof};
+            let proof = Proof { 
+                proof: dlog_proof,
+                sender: self.party_index,
+                recipient: Address::Broadcast
+            };
             Ok((SharedKeys { y, x_i }, proof))
         } else {
             Err(err_type)

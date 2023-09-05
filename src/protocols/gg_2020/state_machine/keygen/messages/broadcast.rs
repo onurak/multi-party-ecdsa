@@ -10,6 +10,8 @@ use zk_paillier::zkproofs::{
     CompositeDLogProof
 };
 
+use super::address::Address;
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct KeyGenBroadcast {
     pub e: EncryptionKey,
@@ -18,6 +20,9 @@ pub struct KeyGenBroadcast {
     pub correct_key_proof: NiCorrectKeyProof,
     pub composite_dlog_proof_base_h1: CompositeDLogProof,
     pub composite_dlog_proof_base_h2: CompositeDLogProof,
+
+    pub sender: u16,
+    pub recipient: Address,
 }
 
 
