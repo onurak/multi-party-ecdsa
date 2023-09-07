@@ -12,8 +12,8 @@ use crate::protocols::gg_2020::state_machine::keygen::{
 }; 
 
 pub struct Round0 {
-    pub own_party_index: u16,
-    pub other_parties: BTreeSet<u16>,
+    pub own_party_index: usize,
+    pub other_parties: BTreeSet<usize>,
     pub key_params: Parameters,
 }
 
@@ -27,7 +27,7 @@ impl Round0 {
             party_keys.phase1_broadcast_phase3_proof_of_correct_key_proof_of_correct_h1h2();
 
         output.push(Msg {
-            sender: self.own_party_index,
+            sender: self.own_party_index as u16,
             receiver: None,
             body: bc1.clone(),
         });

@@ -12,7 +12,7 @@ use super::address::Address;
 pub struct Proof {
     pub proof: DLogProof<Secp256k1, Sha256>,
     
-    pub sender: u16,
+    pub sender: usize,
     pub recipient: Address,
 }
 

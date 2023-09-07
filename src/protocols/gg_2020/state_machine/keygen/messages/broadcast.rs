@@ -21,7 +21,7 @@ pub struct KeyGenBroadcast {
     pub composite_dlog_proof_base_h1: CompositeDLogProof,
     pub composite_dlog_proof_base_h2: CompositeDLogProof,
 
-    pub sender: u16,
+    pub sender: usize,
     pub recipient: Address,
 }
 

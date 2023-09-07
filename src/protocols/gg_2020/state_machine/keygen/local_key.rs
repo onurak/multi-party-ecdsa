@@ -7,7 +7,9 @@ use paillier::EncryptionKey;
 use zk_paillier::zkproofs::DLogStatement;
 
 use crate::protocols::gg_2020::state_machine::keygen::messages::parameters::Parameters;
+use crate::protocols::gg_2020::state_machine::keygen::types::SecretShare;
 
+use super::party_i::party_to_point_map::PartyToPointMap;
 use super::party_i::shared_keys::SharedKeys;
 
 
@@ -21,10 +23,12 @@ pub struct LocalKey<E: Curve> {
     pub h1_h2_n_tilde_vec: Vec<DLogStatement>,
     pub vss_scheme: VerifiableSS<E>,
 
-    pub own_party_index: u16,
-    pub other_parties: BTreeSet<u16>,
+    pub own_party_index: usize,
+    pub other_parties: BTreeSet<usize>,
     pub public_key: Point<E>,
     pub key_params: Parameters,
+    pub secret_share: SecretShare<E>,
+    pub party_to_point_map: PartyToPointMap,
 }
 
 

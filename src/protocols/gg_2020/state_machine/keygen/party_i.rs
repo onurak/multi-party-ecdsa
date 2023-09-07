@@ -1,6 +1,7 @@
 pub mod keys;
 pub mod shared_keys;
 pub mod paillier_keys;
+pub mod party_to_point_map;
 
 use curv::arithmetic::traits::*;
 use curv::BigInt;

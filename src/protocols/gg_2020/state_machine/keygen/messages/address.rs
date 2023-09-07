@@ -7,6 +7,6 @@ use serde::{
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub enum Address {
-    Peer(u16),
+    Peer(usize),
     Broadcast,
 }

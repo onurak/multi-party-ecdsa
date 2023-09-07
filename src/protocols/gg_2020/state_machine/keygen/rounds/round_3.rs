@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
 use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
 use curv::cryptographic_primitives::secret_sharing::feldman_vss::VerifiableSS;
@@ -8,6 +8,9 @@ use round_based::containers::push::Push;
 use round_based::containers::{self, P2PMsgs, Store};
 use round_based::Msg;
 
+use crate::protocols::gg_2020::state_machine::keygen::error::keygen_error::KeygenError;
+use crate::protocols::gg_2020::state_machine::keygen::party_i::party_to_point_map::PartyToPointMap;
+use crate::protocols::gg_2020::state_machine::keygen::types::SecretShare;
 use crate::protocols::gg_2020::state_machine::keygen::{
     messages::{
         broadcast::KeyGenBroadcast,
@@ -29,11 +32,13 @@ pub struct Round3 {
     pub(super) bc_vec: Vec<KeyGenBroadcast>,
 
     pub(super) own_vss: VerifiableSS<Secp256k1>,
-    pub(super) own_share: Scalar<Secp256k1>,
+    pub(super) own_share: SecretShare<Secp256k1>,
 
-    pub(super) own_party_index: u16,
-    pub(super) other_parties: BTreeSet<u16>,
+    pub(super) own_party_index: usize,
+    pub(super) other_parties: BTreeSet<usize>,
     pub(super) key_params: Parameters,
+    pub(super) own_point: SecretShare<Secp256k1>,
+    pub(super) other_points: HashMap<usize, SecretShare<Secp256k1>>,
 }
 
 impl Round3 {
@@ -67,12 +72,23 @@ impl Round3 {
             .map_err(ProceedError::Round3VerifyVssConstruct)?;
 
         output.push(Msg {
-            sender: self.own_party_index,
+            sender: self.own_party_index as u16,
             receiver: None,
             body: proof.clone(),
         });
 
         let vss_schemes = feldman_vss_list.iter().map(|x| x.vss.clone()).collect();
+
+        let mut shares: HashMap<usize, FeldmanVSS> = feldman_vss_list.into_iter().map(|x| (x.sender, x.clone())).collect();
+        let private_share = shares
+            .iter()
+            .fold(self.own_point.1, |acc, (_party, fvss)| acc + fvss.share.1.clone());
+
+        let points = self
+            .other_points
+            .iter()
+            .map(|(p, share_xy)| (*p, share_xy.0))
+            .collect();
 
         Ok(Round4 {
             keys: self.keys.clone(),
@@ -85,6 +101,8 @@ impl Round3 {
             own_party_index: self.own_party_index,
             other_parties: self.other_parties.clone(),
             key_params: self.key_params,
+            secret_share: (self.own_point.0, private_share),
+            party_to_point_map: PartyToPointMap { points },
         })
     }
     pub fn is_expensive(&self) -> bool {

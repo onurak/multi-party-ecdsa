@@ -5,14 +5,16 @@ use serde::{
     Deserialize,
 };
 
+use crate::protocols::gg_2020::state_machine::keygen::types::SecretShare;
+
 use super::address::Address;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FeldmanVSS {
     pub vss: VerifiableSS<Secp256k1>, 
-    pub share: Scalar<Secp256k1>,
+    pub share: SecretShare<Secp256k1>,
     
-    pub sender: u16,
+    pub sender: usize,
     pub recipient: Address,
 }
 

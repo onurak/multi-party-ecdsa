@@ -8,6 +8,8 @@ use paillier::EncryptionKey;
 use round_based::containers::{self, BroadcastMsgs, Store};
 use zk_paillier::zkproofs::DLogStatement;
 
+use crate::protocols::gg_2020::state_machine::keygen::party_i::party_to_point_map::PartyToPointMap;
+use crate::protocols::gg_2020::state_machine::keygen::types::SecretShare;
 use crate::protocols::gg_2020::state_machine::keygen::{
     messages::{
         broadcast::KeyGenBroadcast,
@@ -29,9 +31,11 @@ pub struct Round4 {
     pub(super) own_proof: Proof,
     pub(super) vss_vec: Vec<VerifiableSS<Secp256k1>>,
 
-    pub(super) own_party_index: u16,
-    pub(super) other_parties: BTreeSet<u16>,
+    pub(super) own_party_index: usize,
+    pub(super) other_parties: BTreeSet<usize>,
     pub(super) key_params: Parameters,
+    pub(super) secret_share: SecretShare<Secp256k1>,
+    pub(super) party_to_point_map: PartyToPointMap,
 }
 
 impl Round4 {
@@ -65,6 +69,21 @@ impl Round4 {
         let (head, tail) = self.y_vec.split_at(1);
         let y_sum = tail.iter().fold(head[0].clone(), |acc, x| acc + x);
 
+        let new_point_x = self.secret_share.0;
+
+        let mut party_to_point_map = self.party_to_point_map.clone();
+        if let Some(old_point_x) = party_to_point_map
+            .points
+            .insert(self.own_party_index, new_point_x)
+        {
+            // not an error if the correct value is inserted
+            log::warn!(
+                "Own party index was already mapped to point {} instead of {}",
+                old_point_x,
+                new_point_x
+            );
+        }
+
         let local_key = LocalKey {
             paillier_dk: self.keys.paillier_keys.dk,
             pk_vec,
@@ -79,6 +98,8 @@ impl Round4 {
             other_parties: self.other_parties.clone(),         
             public_key: y_sum,
             key_params: self.key_params,
+            secret_share: self.secret_share.clone(),
+            party_to_point_map: party_to_point_map,
         };
 
         Ok(local_key)

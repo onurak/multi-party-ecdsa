@@ -9,20 +9,21 @@ use curv::elliptic::curves::{secp256_k1::Secp256k1, Curve, Point, Scalar};
 use curv::BigInt;
 use sha2::Sha256;
 
-use crate::protocols::gg_2020::state_machine::keygen::messages::address::Address;
 use crate::protocols::gg_2020::state_machine::keygen::{
     messages::broadcast::KeyGenBroadcast,
     messages::decommit::KeyGenDecommit,
     messages::feldman_vss::FeldmanVSS,
     messages::parameters::Parameters,
     messages::proof::Proof,
+    messages::address::Address,
     party_i::shared_keys::SharedKeys,
     party_i::paillier_keys::PaillierKeys,
 };
 
 
 use paillier::{
-    DecryptionKey, EncryptionKey, KeyGeneration, Paillier, 
+    KeyGeneration, 
+    Paillier, 
 };
 
 use serde::{Deserialize, Serialize};
@@ -45,7 +46,7 @@ pub struct Keys<E: Curve = Secp256k1> {
     pub y_i: Point<E>,
     pub paillier_keys: PaillierKeys,
 
-    pub party_index: u16,
+    pub party_index: usize,
     pub n_tilde: BigInt,
     pub h1: BigInt,
     pub h2: BigInt,
@@ -55,7 +56,7 @@ pub struct Keys<E: Curve = Secp256k1> {
 
 impl Keys {
 
-    pub fn create_safe_prime(index: u16) -> Self {
+    pub fn create_safe_prime(index: usize) -> Self {
         let u = Scalar::<Secp256k1>::random();
         let y = Point::generator() * &u;
 
@@ -127,7 +128,7 @@ impl Keys {
         params: &Parameters,
         decom_vec: &[KeyGenDecommit],
         bc1_vec: &[KeyGenBroadcast],
-    ) -> Result<(VerifiableSS<Secp256k1>, Vec<Scalar<Secp256k1>>, u16), ErrorType> {
+    ) -> Result<(VerifiableSS<Secp256k1>, Vec<Scalar<Secp256k1>>, usize), ErrorType> {
         let mut bad_actors_vec = Vec::new();
         // test length:
         assert_eq!(decom_vec.len(), usize::from(params.share_count));
@@ -201,7 +202,7 @@ impl Keys {
         let correct_ss_verify = (0..y_vec.len())
             .map(|i| {
                 let res = feldman_vss_vec[i].vss
-                    .validate_share(&feldman_vss_vec[i].share, index.try_into().unwrap())
+                    .validate_share(&feldman_vss_vec[i].share.1, index.try_into().unwrap())
                     .is_ok()
                     && feldman_vss_vec[i].vss.commitments[0] == y_vec[i];
                 if !res {
@@ -224,7 +225,7 @@ impl Keys {
 
             let x_i = feldman_vss_vec
                 .iter()
-                .fold(Scalar::<Secp256k1>::zero(), |acc, x| acc + x.share.clone());
+                .fold(Scalar::<Secp256k1>::zero(), |acc, x| acc + x.share.1.clone());
             let dlog_proof = DLogProof::prove(&x_i);
             let proof = Proof { 
                 proof: dlog_proof,

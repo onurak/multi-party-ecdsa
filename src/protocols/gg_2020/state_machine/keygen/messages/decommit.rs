@@ -13,7 +13,7 @@ pub struct KeyGenDecommit {
     pub blind_factor: BigInt,
     pub y_i: Point<Secp256k1>,
     
-    pub sender: u16,
+    pub sender: usize,
     pub recipient: Address,
 }
 

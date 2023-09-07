@@ -1,10 +1,12 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
+use curv::elliptic::curves::{Secp256k1, Scalar};
 use round_based::containers::push::Push;
 use round_based::containers::{self, BroadcastMsgs, Store};
 use round_based::Msg;
 
 use crate::protocols::gg_2020::state_machine::keygen::messages::address::Address;
+use crate::protocols::gg_2020::state_machine::keygen::types::{FE, SecretShare};
 use crate::protocols::gg_2020::state_machine::keygen::{
     messages::{
         broadcast::KeyGenBroadcast,
@@ -25,8 +27,8 @@ pub struct Round2 {
     pub(super) commitments: Vec<KeyGenBroadcast>,
     pub(super) decom: KeyGenDecommit,
 
-    pub(super) own_party_index: u16,
-    pub(super) other_parties: BTreeSet<u16>,
+    pub(super) own_party_index: usize,
+    pub(super) other_parties: BTreeSet<usize>,
     pub(super) key_params: Parameters,
 }
 
@@ -51,22 +53,37 @@ impl Round2 {
             )
             .map_err(ProceedError::Round2VerifyCommitments)?;
 
+        let mut mapped_shares: HashMap<usize, (usize, Scalar<Secp256k1>)> = HashMap::new();
+        
         for (i, share) in vss_result.1.iter().enumerate() {
-            if i + 1 == usize::from(self.own_party_index) {
+
+            mapped_shares.insert(i+1, (i + 1, share.clone()));
+
+            if i + 1 == self.own_party_index {
                 continue;
             }
 
             output.push(Msg {
-                sender: self.own_party_index,
+                sender: self.own_party_index as u16,
                 receiver: Some(i as u16 + 1),
                 body: FeldmanVSS { 
                     vss: vss_result.0.clone(), 
-                    share: share.clone(),
+                    share: (i + 1, share.clone()),
                     sender: self.own_party_index,
-                    recipient: Address::Peer(i as u16 + 1),
+                    recipient: Address::Peer(i + 1),
                 },
             })
         }
+
+        let own_party_index = self.own_party_index.clone();
+        let (parties_points, own_point): (Vec<(_, _)>, Vec<(_, _)>) = mapped_shares
+            .into_iter()
+            .partition(|(party, _)| *party != own_party_index);
+        let own_point = own_point[0].1.clone();
+        let other_points = parties_points
+            .into_iter()
+            .map(|(party, share_xy)| (party, share_xy))
+            .collect::<HashMap<_, _>>();
 
         Ok(Round3 {
             keys: self.keys,
@@ -75,11 +92,13 @@ impl Round2 {
             bc_vec: self.commitments,
 
             own_vss: vss_result.0.clone(),
-            own_share: vss_result.1[usize::from(self.own_party_index - 1)].clone(),
+            own_share: (self.own_party_index, vss_result.1[usize::from(self.own_party_index - 1)].clone()),
 
             own_party_index: self.own_party_index,
             other_parties: self.other_parties.clone(),
             key_params: self.key_params,
+            own_point: own_point.clone(),
+            other_points,
         })
     }
     pub fn is_expensive(&self) -> bool {
@@ -88,4 +107,5 @@ impl Round2 {
     pub fn expects_messages(i: u16, n: u16) -> Store<BroadcastMsgs<KeyGenDecommit>> {
         containers::BroadcastMsgsStore::new(i, n)
     }
+
 }

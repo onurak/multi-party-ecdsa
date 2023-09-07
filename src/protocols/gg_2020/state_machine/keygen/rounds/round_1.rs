@@ -20,8 +20,8 @@ pub struct Round1 {
     pub(super) bc1: KeyGenBroadcast,
     pub(super) decom1: KeyGenDecommit,
 
-    pub(super) own_party_index: u16,
-    pub(super) other_parties: BTreeSet<u16>,
+    pub(super) own_party_index: usize,
+    pub(super) other_parties: BTreeSet<usize>,
     pub(super) key_params: Parameters,
 }
 
@@ -35,7 +35,7 @@ impl Round1 {
         O: Push<Msg<KeyGenDecommit>>,
     {
         output.push(Msg {
-            sender: self.own_party_index,
+            sender: self.own_party_index as u16,
             receiver: None,
             body: self.decom1.clone(),
         });

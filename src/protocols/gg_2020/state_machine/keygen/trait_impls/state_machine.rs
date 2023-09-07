@@ -39,10 +39,10 @@ impl StateMachine for Keygen {
                     })?;
 
                 let mut m_mut = m.clone();
-                m_mut.sender = msg.sender;
+                m_mut.sender = msg.sender as usize;
                 m_mut.recipient = Address::Broadcast;
                 if let Some(receiver) = msg.receiver {
-                    m_mut.recipient = Address::Peer(receiver);
+                    m_mut.recipient = Address::Peer(receiver as usize);
                 }
 
                 store
@@ -64,10 +64,10 @@ impl StateMachine for Keygen {
                     })?;
 
                 let mut m_mut = m.clone();
-                m_mut.sender = msg.sender;
+                m_mut.sender = msg.sender as usize;
                 m_mut.recipient = Address::Broadcast;
                 if let Some(receiver) = msg.receiver {
-                    m_mut.recipient = Address::Peer(receiver);
+                    m_mut.recipient = Address::Peer(receiver as usize);
                 }
     
                 store
@@ -89,10 +89,10 @@ impl StateMachine for Keygen {
                     })?;
 
                 let mut m_mut = m.clone();
-                m_mut.sender = msg.sender;
+                m_mut.sender = msg.sender as usize;
                 m_mut.recipient = Address::Broadcast;
                 if let Some(receiver) = msg.receiver {
-                    m_mut.recipient = Address::Peer(receiver);
+                    m_mut.recipient = Address::Peer(receiver as usize);
                 }
     
                 store
@@ -114,10 +114,10 @@ impl StateMachine for Keygen {
                     })?;
 
                 let mut m_mut = m.clone();
-                m_mut.sender = msg.sender;
+                m_mut.sender = msg.sender as usize;
                 m_mut.recipient = Address::Broadcast;
                 if let Some(receiver) = msg.receiver {
-                    m_mut.recipient = Address::Peer(receiver);
+                    m_mut.recipient = Address::Peer(receiver as usize);
                 }
     
                 store

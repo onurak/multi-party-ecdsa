@@ -16,3 +16,4 @@ pub enum R {
     Final(LocalKey<Secp256k1>),
     Gone,
 }
+

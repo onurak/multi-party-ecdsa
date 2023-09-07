@@ -5,14 +5,10 @@ pub mod feldman_vss;
 pub mod proof;
 pub mod address;
 
-use curv::cryptographic_primitives::proofs::sigma_dlog::DLogProof;
-use curv::elliptic::curves::Secp256k1;
-use round_based::Msg;
 use serde::{
     Serialize,
     Deserialize,
 };
-use sha2::Sha256;
 
 use self::broadcast::KeyGenBroadcast;
 use self::decommit::KeyGenDecommit;

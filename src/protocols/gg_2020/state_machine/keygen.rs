@@ -84,11 +84,11 @@ impl Keygen {
         }
 
 
-        let other_parties: BTreeSet<u16> = (0..=n).into_iter().filter(|x| *x != i).collect();
+        let other_parties: BTreeSet<usize> = (0..=(n as usize)).into_iter().filter(|x| *x != i as usize).collect();
 
         let mut state = Self {
             round: R::Round0(Round0 { 
-                own_party_index: i, 
+                own_party_index: i as usize, 
                 key_params: Parameters::new(t, n),
                 other_parties
             }),
