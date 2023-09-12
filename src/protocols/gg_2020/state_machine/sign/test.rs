@@ -11,8 +11,8 @@ use crate::protocols::gg_2020::{
     party_i::verify,
     state_machine::keygen::test::simulate_keygen,
     state_machine::sign::{
-        CompletedOfflineStage,
-        OfflineStage,
+        rounds::CompletedOfflineStage,
+        stages::offline_stage::OfflineStage,
         stages::sign_manual::SignManual,
     }
 };

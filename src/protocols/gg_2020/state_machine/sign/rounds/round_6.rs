@@ -13,7 +13,7 @@ use crate::protocols::gg_2020::{
             HEGProof, 
             SI,
         },
-        CompletedOfflineStage, 
+        rounds::CompletedOfflineStage, 
         error::sign_round_error::SignRoundError,
     },
     

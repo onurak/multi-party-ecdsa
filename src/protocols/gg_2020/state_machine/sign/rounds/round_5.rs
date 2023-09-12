@@ -32,7 +32,7 @@ use crate::protocols::gg_2020::{
             SI,
             RDash,
         },
-        CompletedOfflineStage, 
+        rounds::CompletedOfflineStage, 
         error::sign_round_error::SignRoundError,
         rounds::round_6::Round6,
         types::SignRoundResult,
