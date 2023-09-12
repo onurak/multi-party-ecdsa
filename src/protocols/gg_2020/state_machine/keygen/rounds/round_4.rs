@@ -17,7 +17,7 @@ use crate::protocols::gg_2020::state_machine::keygen::{
         proof::Proof,
     },
     types::ProceedResult, 
-    error::proceed_error::ProceedError,
+    error::keygen_round_error::KeygenRoundError,
     party_i::keys::Keys,   
     party_i::shared_keys::SharedKeys,    
     local_key::LocalKey,
@@ -52,7 +52,7 @@ impl Round4 {
             &self.y_vec,
             &self.vss_vec,
         )
-        .map_err(ProceedError::Round4VerifyDLogProof)?;
+        .map_err(KeygenRoundError::Round4VerifyDLogProof)?;
         let pk_vec = (0..self.key_params.share_count as usize)
             .map(|i| dlog_proofs[i].proof.pk.clone())
             .collect::<Vec<Point<Secp256k1>>>();

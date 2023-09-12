@@ -2,7 +2,7 @@ use round_based::{containers::StoreErr, IsCritical};
 use thiserror::Error;
 
 use crate::protocols::gg_2020::state_machine::keygen::error::{
-    proceed_error::ProceedError,
+    keygen_round_error::KeygenRoundError,
     internal_error::InternalError,
 };
 
@@ -15,7 +15,7 @@ use crate::protocols::gg_2020::state_machine::keygen::error::{
 pub enum KeygenError {
     /// Round proceeding resulted in error
     #[error("proceed round: {0}")]
-    ProceedRound(#[source] ProceedError),
+    ProceedRound(#[source] KeygenRoundError),
 
     /// Too few parties (`n < 2`)
     #[error("at least 2 parties are required for keygen")]

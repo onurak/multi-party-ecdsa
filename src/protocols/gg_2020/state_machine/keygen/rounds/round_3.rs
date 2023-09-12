@@ -21,7 +21,7 @@ use crate::protocols::gg_2020::state_machine::keygen::{
     },
     types::ProceedResult, 
     rounds::round_4::Round4, 
-    error::proceed_error::ProceedError,
+    error::keygen_round_error::KeygenRoundError,
     party_i::keys::Keys,    
 };
 
@@ -69,7 +69,7 @@ impl Round3 {
                 &feldman_vss_list,
                 self.own_party_index.into(),
             )
-            .map_err(ProceedError::Round3VerifyVssConstruct)?;
+            .map_err(KeygenRoundError::Round3VerifyVssConstruct)?;
 
         output.push(Msg {
             sender: self.own_party_index as u16,

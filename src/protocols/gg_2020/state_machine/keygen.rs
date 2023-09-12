@@ -9,11 +9,6 @@ pub mod types;
 pub mod test;
 
 use std::{mem::replace, collections::BTreeSet};
-use sha2::Sha256;
-use curv::{
-    cryptographic_primitives::proofs::sigma_dlog::DLogProof,
-    elliptic::curves::secp256_k1::Secp256k1,
-};
 use round_based::{
     Msg,
     containers::{

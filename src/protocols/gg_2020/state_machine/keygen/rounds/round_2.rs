@@ -16,7 +16,7 @@ use crate::protocols::gg_2020::state_machine::keygen::{
     },
     types::ProceedResult, 
     rounds::round_3::Round3, 
-    error::proceed_error::ProceedError,
+    error::keygen_round_error::KeygenRoundError,
     party_i::keys::Keys,    
 };
 
@@ -51,7 +51,7 @@ impl Round2 {
                 &received_decom,
                 &self.commitments,
             )
-            .map_err(ProceedError::Round2VerifyCommitments)?;
+            .map_err(KeygenRoundError::Round2VerifyCommitments)?;
 
         let mut mapped_shares: HashMap<usize, (usize, Scalar<Secp256k1>)> = HashMap::new();
         
