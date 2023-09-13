@@ -8,7 +8,8 @@ use curv::arithmetic::Converter;
 use curv::BigInt;
 
 use multi_party_ecdsa::protocols::gg_2020::state_machine::sign::{
-    OfflineStage, SignManual,
+    stages::offline_stage::OfflineStage,
+    stages::sign_manual::SignManual
 };
 use round_based::async_runtime::AsyncProtocol;
 use round_based::Msg;
